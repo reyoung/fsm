@@ -1,7 +1,7 @@
 package fsm_test
 
 import (
-	fsmModule "git.code.oa.com/prc-x/fsm"
+	fsmModule "github.com/reyoung/fsm"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )

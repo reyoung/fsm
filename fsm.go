@@ -30,12 +30,24 @@ type State interface {
 	FSMStateID() string
 }
 
+type StringState string
+
+func (s StringState) FSMStateID() string {
+	return string(s)
+}
+
 // Event defines the FSM event.
 // NOTE: the `FSMEventID` in one FSM should be unique.
 // NOTE: the Event may carry data and can be mutable for each `ProcessEvent`.
 //       FSM support filter event by its carrying data. See `AddTransition` for details.
 type Event interface {
 	FSMEventID() string
+}
+
+type StringEvent string
+
+func (s StringEvent) FSMEventID() string {
+	return string(s)
 }
 
 // transition is an internal data structure.
