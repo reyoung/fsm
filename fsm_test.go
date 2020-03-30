@@ -44,4 +44,5 @@ func TestSimpleFSM(t *testing.T) {
 	assert.Nil(t, fsm.AddTransition(on, switchEventID, off, nil, nil))
 	assert.Nil(t, fsm.ProcessEvent(&Switch{}))
 	assert.Equal(t, on, fsm.CurrentState())
+	assert.NotEmpty(t, fsm.DumpGraphviz())
 }

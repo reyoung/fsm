@@ -3,6 +3,7 @@ package fsm
 import (
 	"errors"
 	"fmt"
+	"github.com/emicklei/dot"
 )
 
 var (
@@ -71,6 +72,25 @@ type FSM struct {
 	transitions               map[string]map[string][]*transition
 	payload                   interface{}
 	processEventInvokeCounter int
+}
+
+func (fsm *FSM) DumpGraphviz() string {
+	graph := dot.NewGraph(dot.Directed)
+	for state := range fsm.states {
+		node := graph.Node(state)
+		node.Attr("shape", "box")
+	}
+
+	for fromNodeID, evTrans := range fsm.transitions {
+		fromNode := graph.Node(fromNodeID)
+		for evID, trans := range evTrans {
+			for _, tran := range trans {
+				toNode := graph.Node(tran.to.FSMStateID())
+				graph.Edge(fromNode, toNode, evID)
+			}
+		}
+	}
+	return graph.String()
 }
 
 // NewFSM will create a new fsm with initialize state. The nullable `payload` will pass to each
