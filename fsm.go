@@ -8,13 +8,16 @@ import (
 
 var (
 	AlreadyExists = errors.New("already exists")
-	NoTransition  = errors.New("no transition registered")
 )
 
 const (
 	ShouldNotReEnterPanic = "the process event should not re-enter. " +
 		"i.e., ProcessEvent should not be invoked in action/guard"
 )
+
+func noTrasitionFromStateAndEvent(fromState string, event Event) error {
+	return errors.New(fmt.Sprintf("no transition from state(%s) and event(%s)", fromState, event.FSMEventID()))
+}
 
 func stateNotFound(state State) error {
 	return errors.New(fmt.Sprintf("state %s not found", state.FSMStateID()))
@@ -177,11 +180,11 @@ func (fsm *FSM) ProcessEvent(ev Event) error {
 
 	trans, ok := fsm.transitions[fsm.curState]
 	if !ok {
-		return NoTransition
+		return noTrasitionFromStateAndEvent(fsm.curState, ev)
 	}
 	transList, ok := trans[ev.FSMEventID()]
 	if !ok {
-		return NoTransition
+		return noTrasitionFromStateAndEvent(fsm.curState, ev)
 	}
 	for _, t := range transList {
 		if !t.guard(fsm.payload, ev) {
@@ -195,7 +198,7 @@ func (fsm *FSM) ProcessEvent(ev Event) error {
 		fsm.curState = t.to.FSMStateID()
 		return nil
 	}
-	return NoTransition
+	return noTrasitionFromStateAndEvent(fsm.curState, ev)
 }
 
 func (fsm *FSM) AddState(state State) error {
