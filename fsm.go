@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/emicklei/dot"
+	"github.com/reyoung/delegate"
 )
 
 var (
@@ -64,6 +65,13 @@ type transition struct {
 	action func(interface{}, Event) error
 }
 
+type ActionHookArgs struct {
+	FromState State
+	ToState   State
+	Event     Event
+	Payload   interface{}
+}
+
 // FSM is a finite state machine.
 // NOTE: It is not thread-safe. It is caller's duty to add mutex/shared mutex when calling FSM concurrently.
 type FSM struct {
@@ -75,6 +83,8 @@ type FSM struct {
 	transitions               map[string]map[string][]*transition
 	payload                   interface{}
 	processEventInvokeCounter int
+	GlobalBeforeAction        delegate.Delegate
+	GlobalAfterAction         delegate.Delegate
 }
 
 func (fsm *FSM) DumpGraphviz() string {
@@ -191,11 +201,19 @@ func (fsm *FSM) ProcessEvent(ev Event) error {
 			continue
 		}
 
+		args := ActionHookArgs{
+			FromState: fsm.states[fsm.curState],
+			ToState:   t.to,
+			Event:     ev,
+			Payload:   fsm.payload,
+		}
+		fsm.GlobalBeforeAction.Apply(args)
 		err := t.action(fsm.payload, ev)
 		if err != nil {
 			return err
 		}
 		fsm.curState = t.to.FSMStateID()
+		fsm.GlobalAfterAction.Apply(args)
 		return nil
 	}
 	return noTrasitionFromStateAndEvent(fsm.curState, ev)

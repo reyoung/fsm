@@ -1,6 +1,9 @@
 package fsm
 
-import "sync"
+import (
+	"github.com/reyoung/parallel"
+	"sync"
+)
 
 type queuedEventEntry struct {
 	ev         Event
@@ -31,16 +34,15 @@ func (q *QueuedFSM) Close() error {
 }
 
 func (q *QueuedFSM) ProcessEvent(ev Event) (errResult error) {
-	var wg sync.WaitGroup
-	wg.Add(1)
+	notification := parallel.NewNotification()
 	q.evChan <- &queuedEventEntry{
 		ev: ev,
 		onComplete: func(err error) {
 			errResult = err
-			wg.Done()
+			notification.Done()
 		},
 	}
-	wg.Wait()
+	notification.Wait()
 	return
 }
 

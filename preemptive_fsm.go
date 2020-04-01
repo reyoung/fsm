@@ -2,6 +2,7 @@ package fsm
 
 import (
 	"errors"
+	"github.com/reyoung/parallel"
 	"sync"
 )
 
@@ -74,17 +75,16 @@ func (p *PreemptiveFSM) mainLoop() {
 }
 
 func (p *PreemptiveFSM) ProcessEvent(event Event) error {
-	var wg sync.WaitGroup
-	wg.Add(1)
+	notification := parallel.NewNotification()
 	var result error
 	p.evChan <- &preemptiveEventEntry{
 		ev: event,
 		onComplete: func(err error) {
 			result = err
-			wg.Done()
+			notification.Done()
 		},
 	}
-	wg.Wait()
+	notification.Wait()
 	return result
 }
 
